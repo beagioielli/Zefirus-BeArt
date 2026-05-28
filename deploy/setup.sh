@@ -67,4 +67,4 @@ location /app/ {
 NGINX
 
 echo "[setup] Iniciando servidor..."
-exec /opt/docker/bin/entrypoint.sh
+exec /opt/docker/bin/entrypoint.sh supervisord
