@@ -55,16 +55,54 @@ if [ ! -f "$APP_DIR/.initialized" ]; then
     echo "[setup] Setup concluido!"
 fi
 
-# Nginx: SPA routing para /app/*
-mkdir -p /opt/docker/etc/nginx/vhost.common.d
-cat > /opt/docker/etc/nginx/vhost.common.d/10-spa.conf << 'NGINX'
-location /app {
-    try_files $uri /app/index.html;
+# Nginx: provision script to write complete Laravel vhost (runs after 20-nginx.sh)
+mkdir -p /opt/docker/provision/entrypoint.d
+cat > /opt/docker/provision/entrypoint.d/99-laravel-nginx.sh << 'PROVISION_EOF'
+#!/bin/sh
+mkdir -p /opt/docker/etc/nginx
+cat > /opt/docker/etc/nginx/vhost.conf << 'NGINX_EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    root /var/www/html/public;
+    index index.php index.html;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location /app {
+        try_files $uri /app/index.html;
+    }
+
+    location /app/ {
+        try_files $uri /app/index.html;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_param SERVER_NAME $host;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
 }
-location /app/ {
-    try_files $uri /app/index.html;
-}
-NGINX
+NGINX_EOF
+PROVISION_EOF
+chmod +x /opt/docker/provision/entrypoint.d/99-laravel-nginx.sh
 
 echo "[setup] Iniciando servidor..."
 exec /opt/docker/bin/entrypoint.sh supervisord
