@@ -3,7 +3,7 @@ set -e
 
 APP_DIR=/var/www/html
 REPO=https://github.com/beagioielli/Zefirus-BeArt.git
-FRONTEND_VERSION="2"
+FRONTEND_VERSION="3"
 
 echo "[setup] Iniciando..."
 
@@ -116,27 +116,29 @@ http {
         index index.php index.html;
         charset utf-8;
 
-        location / {
+        # Laravel API
+        location /api {
             try_files $uri $uri/ /index.php?$query_string;
         }
 
-        location /app {
-            try_files $uri /app/index.html;
+        # Laravel storage (uploaded files)
+        location /storage {
+            try_files $uri $uri/ =404;
         }
 
-        location /app/ {
-            try_files $uri /app/index.html;
+        # React SPA - serve from /app subdir, fallback to index.html
+        location / {
+            root /var/www/html/public/app;
+            try_files $uri /index.html;
         }
 
         location = /favicon.ico { access_log off; log_not_found off; }
         location = /robots.txt  { access_log off; log_not_found off; }
 
-        error_page 404 /index.php;
-
         location ~ \.php$ {
             fastcgi_pass 127.0.0.1:9000;
             fastcgi_index index.php;
-            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            fastcgi_param SCRIPT_FILENAME /var/www/html/public$fastcgi_script_name;
             include /etc/nginx/fastcgi_params;
             fastcgi_param SERVER_NAME $host;
         }
