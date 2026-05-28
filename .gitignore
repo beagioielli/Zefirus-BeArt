@@ -1,0 +1,23 @@
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Laravel
+backend/vendor/
+backend/.env
+backend/storage/logs/*.log
+backend/storage/app/public
+backend/bootstrap/cache/*.php
+backend/public/storage
+backend/public/build
+backend/.phpunit.result.cache
+backend/.phpunit.cache
+
+# IDE
+.idea/
+.vscode/
+*.DS_Store
+
+# Docker local
+.env

@@ -1,0 +1,61 @@
+services:
+  frontend:
+    build:
+      context: https://github.com/GITHUB_USER/GITHUB_REPO.git#main:frontend
+      args:
+        VITE_API_URL: https://zefirusart.com/api
+    container_name: zefirusart-frontend
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.zefirusart-frontend.rule=Host(`zefirusart.com`) || Host(`www.zefirusart.com`)
+      - traefik.http.routers.zefirusart-frontend.entrypoints=websecure
+      - traefik.http.routers.zefirusart-frontend.tls.certresolver=letsencrypt
+      - traefik.http.services.zefirusart-frontend.loadbalancer.server.port=80
+      - traefik.http.routers.zefirusart-frontend.priority=1
+    networks:
+      - openclaw-net
+
+  backend:
+    build:
+      context: https://github.com/GITHUB_USER/GITHUB_REPO.git#main:backend
+    container_name: zefirusart-backend
+    restart: unless-stopped
+    environment:
+      APP_URL: https://zefirusart.com
+      APP_KEY: ${APP_KEY}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
+      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET}
+      MP_SELLER_ZIP_CODE: ${MP_SELLER_ZIP_CODE}
+      MP_ADMIN_EMAIL: ${MP_ADMIN_EMAIL}
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-127.0.0.1}
+      MAIL_PORT: ${MAIL_PORT:-2525}
+      MAIL_USERNAME: ${MAIL_USERNAME:-null}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-null}
+    volumes:
+      - backend-db:/data
+      - backend-storage:/var/www/storage/app
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.zefirusart-api.rule=(Host(`zefirusart.com`) || Host(`www.zefirusart.com`)) && PathPrefix(`/api`)
+      - traefik.http.routers.zefirusart-api.entrypoints=websecure
+      - traefik.http.routers.zefirusart-api.tls.certresolver=letsencrypt
+      - traefik.http.services.zefirusart-api.loadbalancer.server.port=80
+      - traefik.http.routers.zefirusart-api.priority=10
+      - traefik.http.routers.zefirusart-storage.rule=(Host(`zefirusart.com`) || Host(`www.zefirusart.com`)) && PathPrefix(`/storage`)
+      - traefik.http.routers.zefirusart-storage.entrypoints=websecure
+      - traefik.http.routers.zefirusart-storage.tls.certresolver=letsencrypt
+      - traefik.http.services.zefirusart-storage.loadbalancer.server.port=80
+      - traefik.http.routers.zefirusart-storage.priority=10
+    networks:
+      - openclaw-net
+
+volumes:
+  backend-db:
+  backend-storage:
+
+networks:
+  openclaw-net:
+    external: true

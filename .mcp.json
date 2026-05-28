@@ -1,0 +1,25 @@
+{
+  "inputs": [
+    {
+      "id": "api_token",
+      "type": "promptString",
+      "description": "Insira seu token de API da Hostinger (obrigatório)"
+    }
+  ],
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "http",
+      "url": "https://n8n-jmri.srv1579065.hstgr.cloud/mcp-test/4af5665b-de5d-49cb-8ee3-c8a12a88231c"
+    },
+    "hostinger-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "hostinger-api-mcp@latest"
+      ],
+      "env": {
+        "API_TOKEN": "jFHSf4znXhXC5cPmiV74nUbtxTqEPUHrGv6b9sUVb4a0d4a1"
+      }
+    }
+  }
+}
