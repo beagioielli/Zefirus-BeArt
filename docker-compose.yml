@@ -1,7 +1,7 @@
 services:
   frontend:
     build:
-      context: https://github.com/GITHUB_USER/GITHUB_REPO.git#main:frontend
+      context: https://github.com/beagioielli/Zefirus-BeArt.git#main:frontend
       args:
         VITE_API_URL: https://zefirusart.com/api
     container_name: zefirusart-frontend
@@ -18,7 +18,7 @@ services:
 
   backend:
     build:
-      context: https://github.com/GITHUB_USER/GITHUB_REPO.git#main:backend
+      context: https://github.com/beagioielli/Zefirus-BeArt.git#main:backend
     container_name: zefirusart-backend
     restart: unless-stopped
     environment:
