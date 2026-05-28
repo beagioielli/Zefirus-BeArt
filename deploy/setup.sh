@@ -55,52 +55,78 @@ if [ ! -f "$APP_DIR/.initialized" ]; then
     echo "[setup] Setup concluido!"
 fi
 
-# Nginx: provision script to write complete Laravel vhost (runs after 20-nginx.sh)
+# Nginx: write complete nginx.conf override via provision hook (runs last, after 20-nginx.sh)
 mkdir -p /opt/docker/provision/entrypoint.d
 cat > /opt/docker/provision/entrypoint.d/99-laravel-nginx.sh << 'PROVISION_EOF'
 #!/bin/sh
 mkdir -p /opt/docker/etc/nginx
-cat > /opt/docker/etc/nginx/vhost.conf << 'NGINX_EOF'
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name _;
 
-    root /var/www/html/public;
-    index index.php index.html;
+# Overwrite the main nginx.conf with a Laravel-compatible version
+cat > /opt/docker/etc/nginx/nginx.conf << 'NGINX_EOF'
+worker_processes auto;
+pid /var/run/nginx.pid;
+error_log /dev/stderr warn;
 
-    charset utf-8;
+events {
+    worker_connections 1024;
+    multi_accept on;
+}
 
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
 
-    location /app {
-        try_files $uri /app/index.html;
-    }
+    access_log off;
+    sendfile on;
+    tcp_nopush on;
+    keepalive_timeout 65;
 
-    location /app/ {
-        try_files $uri /app/index.html;
-    }
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
 
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
 
-    error_page 404 /index.php;
+        root /var/www/html/public;
+        index index.php index.html;
+        charset utf-8;
 
-    location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-        fastcgi_param SERVER_NAME $host;
-    }
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
 
-    location ~ /\.(?!well-known).* {
-        deny all;
+        location /app {
+            try_files $uri /app/index.html;
+        }
+
+        location /app/ {
+            try_files $uri /app/index.html;
+        }
+
+        location = /favicon.ico { access_log off; log_not_found off; }
+        location = /robots.txt  { access_log off; log_not_found off; }
+
+        error_page 404 /index.php;
+
+        location ~ \.php$ {
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            include /etc/nginx/fastcgi_params;
+            fastcgi_param SERVER_NAME $host;
+        }
+
+        location ~ /\.(?!well-known).* {
+            deny all;
+        }
     }
 }
 NGINX_EOF
+
+# Fix permissions on public directory
+chmod -R 755 /var/www/html/public 2>/dev/null || true
 PROVISION_EOF
 chmod +x /opt/docker/provision/entrypoint.d/99-laravel-nginx.sh
 
