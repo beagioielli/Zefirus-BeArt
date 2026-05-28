@@ -85,7 +85,7 @@ http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
 
-    access_log /dev/stderr combined;
+    access_log off;
     sendfile on;
     tcp_nopush on;
     keepalive_timeout 65;
