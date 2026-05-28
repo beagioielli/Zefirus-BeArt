@@ -3,11 +3,23 @@ set -e
 
 APP_DIR=/var/www/html
 REPO=https://github.com/beagioielli/Zefirus-BeArt.git
+FRONTEND_VERSION="2"
 
 echo "[setup] Iniciando..."
 
 # Instala Node.js e git se necessário
 apk add --no-cache nodejs npm git 2>/dev/null || true
+
+build_frontend() {
+    echo "[setup] Buildando frontend..."
+    cd /tmp/zefirus/frontend
+    VITE_API_URL=https://zefirusart.com/api npm ci --silent
+    VITE_API_URL=https://zefirusart.com/api npm run build
+    mkdir -p "$APP_DIR/public/app"
+    cp -r dist/. "$APP_DIR/public/app/"
+    echo "$FRONTEND_VERSION" > "$APP_DIR/.frontend_version"
+    echo "[setup] Frontend buildado (v$FRONTEND_VERSION)"
+}
 
 if [ ! -f "$APP_DIR/.initialized" ]; then
     echo "[setup] Primeira execucao - clonando e configurando..."
@@ -38,14 +50,7 @@ if [ ! -f "$APP_DIR/.initialized" ]; then
     php artisan view:cache
     php artisan storage:link 2>/dev/null || true
 
-    # Frontend
-    echo "[setup] Buildando frontend..."
-    cd /tmp/zefirus/frontend
-    VITE_API_URL=https://zefirusart.com/api npm ci --silent
-    VITE_API_URL=https://zefirusart.com/api npm run build
-
-    mkdir -p "$APP_DIR/public/app"
-    cp -r dist/. "$APP_DIR/public/app/"
+    build_frontend
 
     chown -R application:application "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" /data 2>/dev/null || \
     chown -R www-data:www-data "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" /data 2>/dev/null || true
@@ -53,6 +58,15 @@ if [ ! -f "$APP_DIR/.initialized" ]; then
     rm -rf /tmp/zefirus
     touch "$APP_DIR/.initialized"
     echo "[setup] Setup concluido!"
+else
+    # Verifica se o frontend precisa ser atualizado
+    CURRENT_VERSION=$(cat "$APP_DIR/.frontend_version" 2>/dev/null || echo "0")
+    if [ "$CURRENT_VERSION" != "$FRONTEND_VERSION" ]; then
+        echo "[setup] Frontend desatualizado (v$CURRENT_VERSION -> v$FRONTEND_VERSION), reconstruindo..."
+        git clone --depth=1 "$REPO" /tmp/zefirus
+        build_frontend
+        rm -rf /tmp/zefirus
+    fi
 fi
 
 # A cada boot: garantir permissoes e regenerar config cache usando a chave do .env

@@ -1,10 +1,9 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
 export default function ArtworkDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [artwork, setArtwork] = useState<any>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -96,11 +95,6 @@ export default function ArtworkDetail() {
                   <span style={{ fontStyle: 'italic', fontSize: '0.75rem' }}>* {artwork.is_sold ? 'Esta obra já reside em uma coleção' : (artwork.edition_info || 'Peça única. Não há reproduções ou réplicas desta obra.')}</span>
                </div>
 
-               {!artwork.is_sold && (
-                   <button onClick={() => navigate(`/checkout/${artwork.id}`)} style={{ width: '100%', maxWidth: '300px', padding: '0.8rem 1rem', backgroundColor: 'transparent', color: '#222', border: '1px solid #333', fontSize: '0.9rem', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '500', transition: 'all 0.2s', borderRadius: '2px' }}>
-                       Adquirir Obra
-                   </button>
-               )}
                
                <div style={{ marginTop: '3rem' }}>
                    <div style={{ fontSize: '0.95rem', lineHeight: 1.7, color: '#555', whiteSpace: 'pre-wrap' }}>

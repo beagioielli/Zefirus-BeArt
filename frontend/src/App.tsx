@@ -10,7 +10,6 @@ import Contact from './pages/Contact';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Events from './pages/Events';
-import Checkout from './pages/Checkout';
 import Experience from './pages/Experience';
 import Login from './pages/Login';
 import AdminLayout from './components/AdminLayout';
@@ -23,8 +22,6 @@ import AdminPosts from './pages/admin/AdminPosts';
 import AdminPostEdit from './pages/admin/AdminPostEdit';
 import AdminEvents from './pages/admin/AdminEvents';
 import AdminEventEdit from './pages/admin/AdminEventEdit';
-import OrderPending from './pages/OrderPending';
-import OrderSuccess from './pages/OrderSuccess';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminOrderDetail from './pages/admin/AdminOrderDetail';
 import { AuthProvider } from './context/AuthContext';
@@ -45,9 +42,6 @@ function App() {
           <Route path="blog" element={<Blog />} />
           <Route path="blog/:slug" element={<BlogPost />} />
           <Route path="events" element={<Events />} />
-          <Route path="checkout/:id" element={<Checkout />} />
-          <Route path="pedido/:orderId" element={<OrderPending />} />
-          <Route path="pedido/:orderId/confirmado" element={<OrderSuccess />} />
         </Route>
         <Route path="/experience/:hash" element={<Experience />} />
 
