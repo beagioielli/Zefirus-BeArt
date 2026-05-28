@@ -55,6 +55,15 @@ if [ ! -f "$APP_DIR/.initialized" ]; then
     echo "[setup] Setup concluido!"
 fi
 
+# A cada boot: garantir permissoes e regenerar config cache usando a chave do .env
+# (env -u APP_KEY garante que o env vazio do docker-compose nao sobrescreva a chave do .env)
+cd "$APP_DIR"
+chmod -R 755 bootstrap/cache storage 2>/dev/null || true
+chown -R application:application bootstrap/cache storage /data 2>/dev/null || \
+chown -R www-data:www-data bootstrap/cache storage /data 2>/dev/null || true
+env -u APP_KEY php artisan config:cache 2>/dev/null || true
+env -u APP_KEY php artisan route:cache 2>/dev/null || true
+
 # Nginx: write complete nginx.conf override via provision hook (runs last, after 20-nginx.sh)
 mkdir -p /opt/docker/provision/entrypoint.d
 cat > /opt/docker/provision/entrypoint.d/99-laravel-nginx.sh << 'PROVISION_EOF'
